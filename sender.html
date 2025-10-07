@@ -634,10 +634,13 @@
                                 <th>ID</th>
                                 <th>Date Submitted</th>
                                 <th>Forwarded by</th>
+                                <th>Received by</th>
+                                <th>DATE RECEIVED</th>
                                 <th>Name of Company/Contractor</th>
                                 <th>Amount (if Billing)</th>
                                 <th>PARTICULAR/S (content of the request)</th>
                                 <th>STATUS OF REQUEST (c/o miss Jane)</th>
+                                <th>REMARKS</th>
                                 <th>SIGNED COPY RECEIVED BY</th>
                                 <th>RECEIVED DATE</th>
                                 <th>Action</th>
@@ -1135,10 +1138,13 @@ async function loadFileRequestsTable() {
 <td>${r['ID'] || ''}</td>
 <td>${r['Date Submitted'] || ''}</td>
 <td>${r['Forwarded by'] || ''}</td>
+<td>${r['Received by'] || ''}</td>
+<td>${r['DATE RECEIVED'] || ''}</td>
 <td>${r['Name of Company/Contractor'] || ''}</td>
 <td>${r['Amount (if Billing)'] || ''}</td>
 <td>${r['PARTICULAR/S (content of the request)'] || ''}</td>
 <td>${r['STATUS OF REQUEST (c/o miss Jane)'] || ''}</td>
+<td>${r['REMARKS'] || ''}</td>
 <td>${r['SIGNED COPY RECEIVED BY'] || ''}</td>
 <td>${r['RECEIVED DATE'] || ''}</td>
 <td>${actionCell}</td>
