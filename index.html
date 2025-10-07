@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Request System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<style>
+:root {
+    --usjr-green: #006633;
+    --usjr-dark-green: #005026;
+    --usjr-gold: #FFD700;
+    --usjr-gold-light: #ffe066;
+    --usjr-green-hover: #00421e;
+    --usjr-green-light: #38a169;
+    --usjr-green-hover2: #2f855a;
+    --app-bg: #f5f7fa;
+    --input-border: #e2e8f0;
+    --input-focus: #FFD700;
+    --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --sidebar-width: 280px;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--app-bg);
+    color: #333;
+    line-height: 1.6;
+}
+
+/* App Container */
+.app-container {
+    display: block; /* sidebar is fixed; main content flows normally */
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--usjr-green);
+    color: #fff;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    border-right: 4px solid var(--usjr-gold);
+}
+
+.sidebar-header {
+    padding: 2rem 1.5rem;
+    border-bottom: 2px solid var(--usjr-gold);
+    background: var(--usjr-dark-green);
+}
+
+.sidebar-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--usjr-gold);
+}
+
+.sidebar-header i {
+    font-size: 1.8rem;
+    color: var(--usjr-gold);
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 1rem 0;
+}
+
+.menu-item {
+    margin: 0.25rem 0;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+    font-weight: 500;
+}
+
+.menu-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--usjr-gold);
+    border-left-color: var(--usjr-gold);
+}
+
+.menu-item.active .menu-link {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--usjr-gold);
+    border-left-color: var(--usjr-gold);
+}
+
+.menu-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    color: var(--usjr-gold);
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem;
+    border-top: 2px solid var(--usjr-gold);
+    background: var(--usjr-dark-green);
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--usjr-gold);
+    border: none;
+    border-radius: 8px;
+    color: var(--usjr-dark-green);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.logout-btn:hover {
+    background: var(--usjr-gold-light);
+    color: var(--usjr-green);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+.logout-btn:active {
+    background: var(--usjr-gold);
+    color: var(--usjr-dark-green);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.logout-btn i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    color: var(--usjr-dark-green);
+}
+
+/* Main Content */
+/* Key adjustments to make main content fill remaining width without overlapping sidebar */
+.main-content {
+    margin-left: var(--sidebar-width);           /* keep clear of fixed sidebar */
+    width: calc(100% - var(--sidebar-width));   /* take the rest of the viewport */
+    min-height: 100vh;                          /* extend full viewport height */
+    padding: 2rem 2.5rem;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+    overflow: visible;                          /* allow children to control overflow */
+}
+
+/* IMPORTANT FIX: hide non-active sections so only the .active one shows */
+.content-section {
+    display: none;
+}
+.content-section.active {
+    display: block;
+}
+
+/* Form and Inputs */
+.request-form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--usjr-green);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-label i {
+    color: var(--usjr-gold);
+    width: 16px;
+}
+
+.form-input,
+.form-textarea {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    color: var(--usjr-green);
+}
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--usjr-gold);
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
+}
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: #a0aec0;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    justify-content: center;
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--usjr-green) 0%, var(--usjr-gold) 100%);
+    color: #fff;
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 102, 51, 0.19);
+    filter: brightness(1.08);
+}
+.btn-secondary {
+    background-color: var(--usjr-gold-light);
+    color: var(--usjr-green);
+}
+.btn-secondary:hover {
+    background-color: var(--usjr-gold);
+    color: var(--usjr-dark-green);
+    transform: translateY(-1px);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 102, 51, 0.07);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.loading-spinner i {
+    color: var(--usjr-gold);
+    margin-bottom: 1rem;
+}
+
+.loading-spinner p {
+    color: var(--usjr-green);
+    font-weight: 500;
+}
+
+/* Message Container */
+.message-container {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 10000;
+}
+
+.message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease;
+}
+
+.message.success {
+    background-color: var(--usjr-green-light);
+    color: #fff;
+}
+
+.message.error {
+    background-color: #f56565;
+    color: #fff;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Placeholder Content */
+.placeholder-content {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #a0aec0;
+}
+
+.placeholder-content i {
+    margin-bottom: 1rem;
+    color: var(--usjr-gold);
+}
+
+.placeholder-content p {
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    /* reduce sidebar width slightly on tablet */
+    :root { --sidebar-width: 240px; }
+    .main-content {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile: sidebar becomes static, main uses full width */
+    .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+    .app-container {
+        display: block;
+    }
+    .form-actions {
+        flex-direction: column;
+    }
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Table Container and Table Responsiveness */
+/* Allow the main content to grow with the table, but prevent it from overlapping sidebar */
+.table-container {
+    width: 100%;
+    overflow-x: auto;          /* horizontal scroll when needed */
+    background: #fff;
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 2rem;
+    padding: 0.5rem;
+}
+
+/* Make table fluid within available space.
+   Remove forced large min-width; allow cells to wrap so main-content grows vertically when table expands. */
+#requestsTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    table-layout: auto;        /* let the browser decide column widths */
+    min-width: 0;              /* don't force overflow unless content truly requires it */
+}
+
+#requestsTable th, #requestsTable td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 8px;
+    white-space: normal;       /* allow wrapping so table can expand vertically */
+    word-break: break-word;
+    vertical-align: top;
+    font-size: 0.95rem;
+    max-width: 400px;          /* prevent extremely long single-line cells from increasing layout width */
+}
+
+#requestsTable th {
+    background: var(--usjr-gold-light);
+    color: var(--usjr-green);
+    font-weight: 700;
+    border-bottom: 2px solid var(--usjr-gold);
+    white-space: normal;
+}
+
+/* On very narrow viewports, make table more compact and allow scrolling as fallback */
+@media (max-width: 900px) {
+    #requestsTable th, #requestsTable td {
+        font-size: 0.9rem;
+        padding: 8px 6px;
+    }
+}
+
+/* Form Validation Styles */
+.form-input.error,
+.form-textarea.error {
+    border-color: #f56565;
+    box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+}
+
+.error-message {
+    color: #f56565;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.error-message i {
+    font-size: 0.75rem;
+}
+
+/* Style for Action column and Sign button */
+#requestsTable th:last-child, #requestsTable td:last-child {
+    text-align: center;
+}
+.btn-sign {
+    background: var(--usjr-green-light);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 18px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 6px rgba(56,161,105,0.08);
+    outline: none;
+}
+.btn-sign:hover {
+    background: var(--usjr-green-hover2);
+    box-shadow: 0 4px 12px rgba(56,161,105,0.15);
+}
+</style>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-file-alt"></i> File Request</h2>
+                <div id="userInfo" class="user-info" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
+                    <div id="userName" style="color: rgba(255,255,255,0.8);"></div>
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active">
+                    <a href="#submit-request" class="menu-link">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Submit Request</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#view-requests" class="menu-link">
+                        <i class="fas fa-list"></i>
+                        <span>View Requests</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#dashboard" class="menu-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#settings" class="menu-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div id="submit-request" class="content-section active">
+                <div class="page-header">
+                    <h1 style="color: var(--usjr-green);">Submit File Request</h1>
+                    <p>Fill out the form below to submit a new file request.</p>
+                </div>
+
+                <div class="form-container">
+                    <form id="fileRequestForm" class="request-form">
+                        <div class="form-group">
+                            <label for="forwardedBy" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Forwarded By
+                            </label>
+                            <input 
+                                type="text" 
+                                id="forwardedBy" 
+                                name="forwardedBy" 
+                                class="form-input"
+                                placeholder="Enter your name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="companyName" class="form-label">
+                                <i class="fas fa-building"></i>
+                                Company/Contractor Name
+                            </label>
+                            <input 
+                                type="text" 
+                                id="companyName" 
+                                name="companyName" 
+                                class="form-input"
+                                placeholder="Enter company or contractor name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount" class="form-label">
+                                <i class="fas fa-peso-sign"></i>
+                                Amount (if Billing)
+                            </label>
+                            <input 
+                                type="number" 
+                                id="amount" 
+                                name="amount" 
+                                class="form-input"
+                                placeholder="Enter amount (optional)"
+                                step="0.01"
+                                min="0"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="particulars" class="form-label">
+                                <i class="fas fa-clipboard-list"></i>
+                                Particulars
+                            </label>
+                            <textarea 
+                                id="particulars" 
+                                name="particulars" 
+                                class="form-textarea"
+                                placeholder="Enter details about the file request"
+                                rows="4"
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Submit Request
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i>
+                                Reset Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="view-requests" class="content-section">
+                <div class="page-header">
+                    <h1 style="color: var(--usjr-green);">View Requests</h1>
+                    <p>View and manage submitted file requests.</p>
+                    <button id="refreshRequests" class="btn btn-secondary" style="margin-top: 1rem;">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div class="table-container">
+                    <div id="loadingRequests" class="loading-state" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading requests...</p>
+                    </div>
+                    <table id="requestsTable" style="width:100%;border-collapse:collapse;background:#fff;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date Submitted</th>
+                                <th>Forwarded by</th>
+                                <th>Name of Company/Contractor</th>
+                                <th>Amount (if Billing)</th>
+                                <th>PARTICULAR/S (content of the request)</th>
+                                <th>STATUS OF REQUEST (c/o miss Jane)</th>
+                                <th id="actionHeader" style="display:none;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Table rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Approval Modal -->
+            <div id="approvalModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Process Request</h3>
+                        <button class="close-modal" onclick="closeApprovalModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="requestInfo" class="request-info">
+                        <!-- Request details will be populated here -->
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="approvalRemarks">Remarks:</label>
+                        <textarea id="approvalRemarks" placeholder="Enter your remarks here..." required></textarea>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
+                        <button type="button" class="btn btn-approve" onclick="processRequest('approve')">
+                            <i class="fas fa-check"></i> Process Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dashboard" class="content-section">
+                <div class="page-header">
+                    <h1 style="color: var(--usjr-green);">Dashboard</h1>
+                    <p>Overview of file request statistics.</p>
+                </div>
+                <div class="placeholder-content">
+                    <i class="fas fa-chart-bar fa-3x"></i>
+                    <p>Dashboard functionality coming soon...</p>
+                </div>
+            </div>
+
+            <div id="settings" class="content-section">
+                <div class="page-header">
+                    <h1 style="color: var(--usjr-green);">Settings</h1>
+                    <p>Configure application settings.</p>
+                </div>
+                <div class="placeholder-content">
+                    <i class="fas fa-cog fa-3x"></i>
+                    <p>Settings functionality coming soon...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Submitting request...</p>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="message-container"></div>
+
+    <script>
+    // Configuration - Replace with your Google Apps Script Web App URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2f7MFPzR0l-SNmeX4zVlWqiYfR3Ak9xIznL9YlO4Ata0g0LtL0TKG6YTt24dlNUVL_Q/exec';
+
+        // DOM Elements
+        const sidebar = document.querySelector('.sidebar');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const contentSections = document.querySelectorAll('.content-section');
+        const fileRequestForm = document.getElementById('fileRequestForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication first
+            if (!checkAuthentication()) {
+                return;
+            }
+            
+            initializeSidebar();
+            initializeForm();
+            displayUserInfo();
+            
+            // Show initial section
+            showSection('submit-request');
+        });
+        
+        // Check if user is authenticated
+        function checkAuthentication() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                // Redirect to login
+                window.location.href = GOOGLE_SCRIPT_URL;
+                return false;
+            }
+            
+            // Display user info or add logout functionality
+            try {
+                const userData = JSON.parse(user);
+                console.log('Logged in as:', userData.fullName);
+                // You can add user display here
+            } catch (e) {
+                localStorage.removeItem('currentUser');
+                window.location.href = GOOGLE_SCRIPT_URL;
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Display user information
+        function displayUserInfo() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    const userNameDiv = document.getElementById('userName');
+                    if (userNameDiv) {
+                        userNameDiv.textContent = `Welcome, ${userData.fullName}`;
+                    }
+                    
+                    // Add logout handler
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', logout);
+                    }
+                } catch (e) {
+                    console.error('Error displaying user info:', e);
+                }
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = GOOGLE_SCRIPT_URL;
+        }
+
+        // Sidebar Navigation
+        function initializeSidebar() {
+            menuItems.forEach(item => {
+                const link = item.querySelector('.menu-link');
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetSection = this.getAttribute('href').substring(1);
+                    
+                    // Update active menu item
+                    menuItems.forEach(mi => mi.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // Show target section
+                    showSection(targetSection);
+                });
+            });
+        }
+
+        // Show specific content section
+        function showSection(sectionId) {
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        }
+
+        // Form Handling
+        function initializeForm() {
+            if (!fileRequestForm) return;
+            
+            fileRequestForm.addEventListener('submit', handleFormSubmit);
+            
+            // Add real-time validation
+            const inputs = fileRequestForm.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('blur', validateField);
+                input.addEventListener('input', clearFieldError);
+            });
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            const formData = getFormData();
+            
+            try {
+                showLoading(true);
+                const result = await submitToGoogleScript(formData);
+                
+                if (result.success) {
+                    showMessage('File request submitted successfully!', 'success');
+                    fileRequestForm.reset();
+                    clearAllErrors();
+                } else {
+                    throw new Error(result.error || 'Failed to submit request');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showMessage(`Error: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Get form data
+        function getFormData() {
+            const formData = new FormData(fileRequestForm);
+            const amount = formData.get('amount');
+            // Get user info from localStorage
+            let userFirstName = '';
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                userFirstName = user.firstName || '';
+            } catch {}
+            // Get current date for received date
+            const now = new Date();
+            const dateReceived = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0') + ' ' +
+                (now.getHours() >= 12 ? 'PM' : 'AM');
+            return {
+                forwardedBy: formData.get('forwardedBy'),
+                userFirstName: userFirstName,
+                receivedBy: userFirstName,
+                dateReceived: dateReceived,
+                companyName: formData.get('companyName'),
+                amount: amount ? formatAmountWithCommas(amount) : '',
+                particulars: formData.get('particulars'),
+                status: formData.get('status') || 'pending',
+                remarks: formData.get('remarks') || ''
+            };
+        }
+        
+        // Format amount with commas
+        function formatAmountWithCommas(amount) {
+            if (!amount) return '';
+            // Remove existing commas and convert to number
+            const cleanAmount = amount.toString().replace(/,/g, '');
+            const number = parseFloat(cleanAmount);
+            if (isNaN(number)) return amount;
+            // Format with commas
+            const formatted = number.toLocaleString('en-US');
+            console.log('Formatting amount:', amount, '->', formatted);
+            return formatted;
+        }
+
+        // Submit data to Google Apps Script
+        async function submitToGoogleScript(data) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE')) {
+                throw new Error('Please configure your Google Apps Script URL in the JavaScript file');
+            }
+            
+            // Check if we're running from file:// protocol
+            if (window.location.protocol === 'file:') {
+                throw new Error('CORS Error: Please run this application through a web server (http://). See README.md for instructions.');
+            }
+            
+            try {
+                // Create FormData object
+                const formData = new FormData();
+                formData.append('forwardedBy', data.forwardedBy || '');
+                formData.append('receivedBy', data.receivedBy || '');
+                formData.append('dateReceived', data.dateReceived || '');
+                formData.append('companyName', data.companyName || '');
+                formData.append('amount', data.amount || '');
+                formData.append('particulars', data.particulars || '');
+                formData.append('status', data.status || 'pending');
+                formData.append('remarks', data.remarks || '');
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    throw new Error('Network error: Please check your internet connection and ensure the Google Apps Script URL is correct. If running locally, make sure to use a web server (not file://).');
+                }
+                throw error;
+            }
+        }
+
+        // Form Validation
+        function validateForm() {
+            let isValid = true;
+            
+            // Clear previous errors
+            clearAllErrors();
+            
+            // Required fields
+            const requiredFields = [
+                { id: 'forwardedBy', name: 'Forwarded By' },
+                { id: 'companyName', name: 'Company/Contractor Name' },
+                { id: 'particulars', name: 'Particulars' }
+            ];
+            
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const value = element.value.trim();
+                
+                if (!value) {
+                    showFieldError(element, `${field.name} is required`);
+                    isValid = false;
+                }
+            });
+            
+            // Validate amount if provided
+            const amountField = document.getElementById('amount');
+            const amountValue = amountField.value.trim();
+            if (amountValue && (isNaN(amountValue) || parseFloat(amountValue) < 0)) {
+                showFieldError(amountField, 'Please enter a valid amount');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // Validate individual field
+        function validateField(e) {
+            const field = e.target;
+            const value = field.value.trim();
+            
+            // Clear previous error
+            clearFieldError(field);
+            
+            // Check if required field is empty
+            if (field.hasAttribute('required') && !value) {
+                const label = field.previousElementSibling.textContent.replace(/\s*\*?\s*$/, '');
+                showFieldError(field, `${label} is required`);
+                return false;
+            }
+            
+            // Validate amount field
+            if (field.id === 'amount' && value && (isNaN(value) || parseFloat(value) < 0)) {
+                showFieldError(field, 'Please enter a valid amount');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Show field error
+        function showFieldError(field, message) {
+            field.classList.add('error');
+            
+            // Remove existing error message
+            const existingError = field.parentNode.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add new error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            field.parentNode.appendChild(errorDiv);
+        }
+
+        // Clear field error
+        function clearFieldError(field) {
+            if (typeof field === 'object' && field.target) {
+                field = field.target;
+            }
+            
+            field.classList.remove('error');
+            const errorMessage = field.parentNode.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+        }
+
+        // Clear all form errors
+        function clearAllErrors() {
+            const errorFields = fileRequestForm.querySelectorAll('.error');
+            errorFields.forEach(field => clearFieldError(field));
+            
+            const errorMessages = fileRequestForm.querySelectorAll('.error-message');
+            errorMessages.forEach(msg => msg.remove());
+        }
+
+        // Show/hide loading overlay
+        function showLoading(show) {
+            if (show) {
+                loadingOverlay.style.display = 'flex';
+            } else {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Show success/error messages
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            messageDiv.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+            
+            messageContainer.appendChild(messageDiv);
+            
+            // Auto-remove message after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        messageDiv.remove();
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // Add slideOut animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Utility function to format currency
+        function formatCurrency(amount) {
+          if (!amount) return '';
+          return new Intl.NumberFormat('en-PH', {
+              style: 'currency',
+              currency: 'PHP'
+          }).format(amount);
+      }
+
+
+        // Handle window resize for responsive sidebar
+        window.addEventListener('resize', function() {
+            // Add any responsive handling if needed
+        });
+
+        // Console log for debugging
+        console.log('File Request System initialized');
+        console.log('Remember to update the GOOGLE_SCRIPT_URL variable with your actual Google Apps Script Web App URL');
+
+        // View Requests Table Logic
+async function loadFileRequestsTable() {
+    const tableBody = document.querySelector('#requestsTable tbody');
+    const loadingDiv = document.getElementById('loadingRequests');
+    const actionHeader = document.getElementById('actionHeader');
+    let isPAO = false;
+    // Check user office
+    try {
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        isPAO = (user.office || '').toLowerCase().includes('pao');
+    } catch {}
+    if (actionHeader) actionHeader.style.display = isPAO ? '' : 'none';
+    if (!tableBody) return;
+    loadingDiv.style.display = 'block';
+    tableBody.innerHTML = '';
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: new URLSearchParams({ action: 'getFileRequests' })
+        });
+        const result = await response.json();
+        if (!result.success || !result.fileRequests) throw new Error('No data');
+        const requests = result.fileRequests;
+        if (!requests.length) {
+            tableBody.innerHTML = `<tr><td colspan="${isPAO ? 8 : 7}" style="text-align:center;color:#888;padding:2rem;">No requests found</td></tr>`;
+            return;
+        }
+        requests.forEach((r, idx) => {
+            let actionCell = '';
+            if (isPAO) {
+                if ((r['STATUS OF REQUEST (c/o miss Jane)'] || '').toLowerCase() === 'pending') {
+                    actionCell = `<button class='btn-sign' onclick='signRequest(${idx})'><i class="fas fa-pen-nib"></i> Sign</button>`;
+                } else {
+                    actionCell = `<span style='color:#888;'>-</span>`;
+                }
+            }
+            tableBody.innerHTML += `<tr>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['ID'] || ''}</td>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['Date Submitted'] || ''}</td>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['Forwarded by'] || ''}</td>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['Name of Company/Contractor'] || ''}</td>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['Amount (if Billing)'] || ''}</td>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['PARTICULAR/S (content of the request)'] || ''}</td>
+<td style=\"border:1px solid #ccc;padding:8px;\">${r['STATUS OF REQUEST (c/o miss Jane)'] || ''}</td>
+${isPAO ? `<td style=\"border:1px solid #ccc;padding:8px;\">${actionCell}</td>` : ''}
+</tr>`;
+        });
+        // Store requests for action
+        window._requestsData = requests;
+    } catch (e) {
+        tableBody.innerHTML = `<tr><td colspan="${isPAO ? 8 : 7}" style="text-align:center;color:#888;padding:2rem;">Error loading requests</td></tr>`;
+    } finally {
+        loadingDiv.style.display = 'none';
+    }
+}
+
+// Sign request handler for PAO
+
+// Modal for remarks when signing
+let signModal = null;
+let signModalBackdrop = null;
+let signModalSubmitBtn = null;
+let signModalInput = null;
+let signModalCloseBtn = null;
+let signModalIdx = null;
+
+function createSignModal() {
+    if (document.getElementById('signModal')) return;
+    signModalBackdrop = document.createElement('div');
+    signModalBackdrop.id = 'signModalBackdrop';
+    signModalBackdrop.style.position = 'fixed';
+    signModalBackdrop.style.top = '0';
+    signModalBackdrop.style.left = '0';
+    signModalBackdrop.style.width = '100vw';
+    signModalBackdrop.style.height = '100vh';
+    signModalBackdrop.style.background = 'rgba(0,0,0,0.3)';
+    signModalBackdrop.style.zIndex = '10001';
+    signModalBackdrop.style.display = 'flex';
+    signModalBackdrop.style.alignItems = 'center';
+    signModalBackdrop.style.justifyContent = 'center';
+
+    signModal = document.createElement('div');
+    signModal.id = 'signModal';
+    signModal.style.background = '#fff';
+    signModal.style.borderRadius = '10px';
+    signModal.style.boxShadow = '0 8px 32px rgba(0,0,0,0.18)';
+    signModal.style.padding = '2rem 2rem 1.5rem 2rem';
+    signModal.style.maxWidth = '400px';
+    signModal.style.width = '100%';
+    signModal.style.position = 'relative';
+
+    signModal.innerHTML = `
+        <h3 style="margin-bottom:1rem;font-size:1.2rem;color:#2d3748;">Sign Request</h3>
+        <label for="signRemarks" style="font-weight:500;margin-bottom:0.5rem;display:block;">Remarks (required):</label>
+        <textarea id="signRemarks" rows="3" style="width:100%;padding:0.75rem;border:1.5px solid #e2e8f0;border-radius:6px;font-size:1rem;resize:vertical;"></textarea>
+        <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button id="signModalCancel" class="btn btn-secondary" type="button">Cancel</button>
+            <button id="signModalSubmit" class="btn btn-sign" type="button"><i class="fas fa-pen-nib"></i> Sign</button>
+        </div>
+        <button id="signModalClose" style="position:absolute;top:0.5rem;right:0.5rem;background:none;border:none;font-size:1.2rem;color:#888;cursor:pointer;" title="Close">&times;</button>
+    `;
+    signModalBackdrop.appendChild(signModal);
+    document.body.appendChild(signModalBackdrop);
+
+    signModalInput = document.getElementById('signRemarks');
+    signModalSubmitBtn = document.getElementById('signModalSubmit');
+    signModalCloseBtn = document.getElementById('signModalClose');
+    document.getElementById('signModalCancel').onclick = closeSignModal;
+    signModalCloseBtn.onclick = closeSignModal;
+    signModalSubmitBtn.onclick = submitSignModal;
+}
+
+function openSignModal(idx) {
+    createSignModal();
+    signModalIdx = idx;
+    signModalInput.value = '';
+    signModalBackdrop.style.display = 'flex';
+    signModalInput.focus();
+}
+
+function closeSignModal() {
+    if (signModalBackdrop) signModalBackdrop.style.display = 'none';
+    signModalIdx = null;
+}
+
+async function submitSignModal() {
+    const remarks = signModalInput.value.trim();
+    if (!remarks) {
+        signModalInput.style.borderColor = '#f56565';
+        signModalInput.focus();
+        return;
+    }
+    signModalInput.style.borderColor = '#e2e8f0';
+    const idx = signModalIdx;
+    closeSignModal();
+    const requests = window._requestsData || [];
+    const req = requests[idx];
+    if (!req) return;
+    try {
+        const formData = new FormData();
+        formData.append('action', 'updateRequestStatus');
+        formData.append('id', req['ID']);
+        formData.append('status', 'Signed');
+        formData.append('remarks', remarks);
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        if (result.success) {
+            showMessage('Request marked as Signed.', 'success');
+            loadFileRequestsTable();
+        } else {
+            showMessage('Failed to update status.', 'error');
+        }
+    } catch (e) {
+        showMessage('Error updating status.', 'error');
+    }
+}
+
+window.signRequest = function(idx) {
+    openSignModal(idx);
+}
+
+const refreshBtn = document.getElementById('refreshRequests');
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadFileRequestsTable);
+}
+if (document.getElementById('view-requests')) {
+    loadFileRequestsTable();
+}
+    </script>
+</body>
+</html>

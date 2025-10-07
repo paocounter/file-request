@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Request System - Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --usjr-green: #006633;
+            --usjr-dark-green: #005026;
+            --usjr-gold: #FFD700;
+            --usjr-gold-light: #ffe066;
+            --app-bg: #f5f7fa;
+            --input-border: #e2e8f0;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            font-family: var(--font-main);
+            background: var(--usjr-green);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Login Container */
+        .login-container {
+            background: #fff;
+            border-radius: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 400px;
+            width: 100%;
+            border: 2px solid var(--usjr-gold);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-header i {
+            font-size: 3rem;
+            color: var(--usjr-gold);
+            margin-bottom: 1rem;
+        }
+
+        .login-header h1 {
+            font-size: 2rem;
+            color: var(--usjr-green);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .login-header p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        /* Form Styles */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--usjr-green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.97rem;
+            letter-spacing: 0.5px;
+        }
+
+        .form-label i {
+            color: var(--usjr-gold);
+            width: 16px;
+        }
+
+        .form-input {
+            padding: 0.85rem 1rem;
+            border: 2px solid var(--input-border);
+            border-radius: 0;
+            font-size: 1rem;
+            background-color: #fff;
+            color: var(--usjr-green);
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--usjr-gold);
+            box-shadow: 0 0 0 2px var(--usjr-gold-light);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.85rem 2rem;
+            border: none;
+            background: var(--usjr-gold);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            margin-top: 0.5rem;
+            transition: box-shadow 0.2s, filter 0.2s, background 0.2s;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .btn:hover {
+            background: var(--usjr-gold);
+            color: var(--usjr-dark-green);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            filter: brightness(1.08);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Auth Switch */
+        .auth-switch {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .auth-switch a {
+            color: var(--usjr-gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading-spinner i {
+            color: var(--usjr-gold);
+            margin-bottom: 1rem;
+        }
+
+        .loading-spinner p {
+            color: var(--usjr-green);
+            font-weight: 500;
+        }
+
+        /* Message Container */
+        .message-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10000;
+        }
+
+        .message {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+            min-width: 300px;
+        }
+
+        .message.success {
+            background-color: #48bb78;
+            color: white;
+        }
+
+        .message.error {
+            background-color: #f56565;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Form Validation Styles */
+        .form-input.error {
+            border-color: #f56565;
+            box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+        }
+
+        .error-message {
+            color: #f56565;
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        @media (max-width: 500px) {
+            .login-container {
+                padding: 1.5rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="assets/img/logo.png" alt="USJR Logo" style="width: 70px; height: 70px; margin-bottom: 1rem; object-fit: contain;" />
+            <h1>File Request System</h1>
+            <p>Please sign in to continue</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form" style="display: block;">
+            <div class="form-group">
+                <label for="loginUsername" class="form-label">
+                    <i class="fas fa-user"></i>
+                    Username
+                </label>
+                <input 
+                    type="text" 
+                    id="loginUsername" 
+                    name="username" 
+                    class="form-input"
+                    placeholder="Enter your username"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword" class="form-label">
+                    <i class="fas fa-lock"></i>
+                    Password
+                </label>
+                <input 
+                    type="password" 
+                    id="loginPassword" 
+                    name="password" 
+                    class="form-input"
+                    placeholder="Enter your password"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In
+            </button>
+
+            <div class="auth-switch">
+                <p>Don't have an account? <a href="#" id="showSignup">Sign up here</a></p>
+            </div>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signupForm" class="auth-form" style="display: none;">
+            <div class="form-group">
+                <label for="signupFirstName" class="form-label">
+                    <i class="fas fa-user"></i>
+                    First Name
+                </label>
+                <input 
+                    type="text" 
+                    id="signupFirstName" 
+                    name="firstName" 
+                    class="form-input"
+                    placeholder="Enter your first name"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="signupLastName" class="form-label">
+                    <i class="fas fa-user"></i>
+                    Last Name
+                </label>
+                <input 
+                    type="text" 
+                    id="signupLastName" 
+                    name="lastName" 
+                    class="form-input"
+                    placeholder="Enter your last name"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="signupOffice" class="form-label">
+                    <i class="fas fa-building"></i>
+                    Office
+                </label>
+                <select 
+                    id="signupOffice" 
+                    name="office" 
+                    class="form-input"
+                    required
+                >
+                    <option value="">Select your office</option>
+                    <option value="pao">PAO</option>
+                    <option value="cfpdo">CFPDO</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="signupUsername" class="form-label">
+                    <i class="fas fa-user-circle"></i>
+                    Username
+                </label>
+                <input 
+                    type="text" 
+                    id="signupUsername" 
+                    name="username" 
+                    class="form-input"
+                    placeholder="Choose a username"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="signupPassword" class="form-label">
+                    <i class="fas fa-lock"></i>
+                    Password
+                </label>
+                <input 
+                    type="password" 
+                    id="signupPassword" 
+                    name="password" 
+                    class="form-input"
+                    placeholder="Choose a password"
+                    required
+                    minlength="6"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="signupEmail" class="form-label">
+                    <i class="fas fa-envelope"></i>
+                    Email
+                </label>
+                <input 
+                    type="email" 
+                    id="signupEmail" 
+                    name="email" 
+                    class="form-input"
+                    placeholder="Enter your email"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="signupPhone" class="form-label">
+                    <i class="fas fa-phone"></i>
+                    Phone
+                </label>
+                <input 
+                    type="tel" 
+                    id="signupPhone" 
+                    name="phone" 
+                    class="form-input"
+                    placeholder="Enter your phone number"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-user-plus"></i>
+                Sign Up
+            </button>
+
+            <div class="auth-switch">
+                <p>Already have an account? <a href="#" id="showLogin">Sign in here</a></p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p id="loadingText">Signing in...</p>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="message-container"></div>
+
+    <script>
+        // Configuration
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2f7MFPzR0l-SNmeX4zVlWqiYfR3Ak9xIznL9YlO4Ata0g0LtL0TKG6YTt24dlNUVL_Q/exec';
+
+        // DOM Elements
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const showSignup = document.getElementById('showSignup');
+        const showLogin = document.getElementById('showLogin');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeForms();
+            initializeAuthSwitch();
+            checkExistingAuth();
+        });
+
+        // Check if user is already authenticated
+        function checkExistingAuth() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                try {
+                    const u = JSON.parse(user);
+                    const office = (u.office || '').toLowerCase();
+                    if (office.includes('pao')) {
+                        window.location.href = 'receiver.html';
+                    } else if (office.includes('cfpdo')) {
+                        window.location.href = 'sender.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                } catch {
+                    window.location.href = 'index.html';
+                }
+            }
+        }
+
+        // Initialize form handlers
+        function initializeForms() {
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+            
+            if (signupForm) {
+                signupForm.addEventListener('submit', handleSignup);
+            }
+
+            // Add real-time validation
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('blur', validateField);
+                input.addEventListener('input', clearFieldError);
+            });
+        }
+
+        // Initialize auth form switching
+        function initializeAuthSwitch() {
+            if (showSignup) {
+                showSignup.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchToSignup();
+                });
+            }
+
+            if (showLogin) {
+                showLogin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchToLogin();
+                });
+            }
+        }
+
+        // Switch to signup form
+        function switchToSignup() {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            clearAllErrors();
+        }
+
+        // Switch to login form
+        function switchToLogin() {
+            signupForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            clearAllErrors();
+        }
+
+        // Handle login form submission
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            if (!validateLoginForm()) {
+                return;
+            }
+
+            const formData = new FormData(loginForm);
+            const loginData = {
+                action: 'login',
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                showLoading(true, 'Signing in...');
+                const result = await submitToGoogleScript(loginData);
+                
+                if (result.success) {
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    showMessage('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        const office = (result.user.office || '').toLowerCase();
+                        if (office.includes('pao')) {
+                            window.location.href = 'receiver.html';
+                        } else if (office.includes('cfpdo')) {
+                            window.location.href = 'sender.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1000);
+                } else {
+                    throw new Error(result.error || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage(`Login failed: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Handle signup form submission
+        async function handleSignup(e) {
+            e.preventDefault();
+            
+            if (!validateSignupForm()) {
+                return;
+            }
+
+            const formData = new FormData(signupForm);
+            const signupData = {
+                action: 'signup',
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                office: formData.get('office'),
+                username: formData.get('username'),
+                password: formData.get('password'),
+                email: formData.get('email'),
+                phone: formData.get('phone')
+            };
+
+            try {
+                showLoading(true, 'Creating account...');
+                const result = await submitToGoogleScript(signupData);
+                
+                if (result.success) {
+                    showMessage('Account created successfully! Please sign in.', 'success');
+                    signupForm.reset();
+                    setTimeout(() => {
+                        switchToLogin();
+                    }, 2000);
+                } else {
+                    throw new Error(result.error || 'Signup failed');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showMessage(`Signup failed: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Submit data to Google Apps Script
+        async function submitToGoogleScript(data) {
+            const formData = new FormData();
+            Object.keys(data).forEach(key => {
+                formData.append(key, data[key] || '');
+            });
+
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // Validate login form
+        function validateLoginForm() {
+            let isValid = true;
+            clearAllErrors();
+
+            const username = document.getElementById('loginUsername');
+            const password = document.getElementById('loginPassword');
+
+            if (!username.value.trim()) {
+                showFieldError(username, 'Username is required');
+                isValid = false;
+            }
+
+            if (!password.value.trim()) {
+                showFieldError(password, 'Password is required');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Validate signup form
+        function validateSignupForm() {
+            let isValid = true;
+            clearAllErrors();
+
+            const requiredFields = [
+                { id: 'signupFirstName', name: 'First Name' },
+                { id: 'signupLastName', name: 'Last Name' },
+                { id: 'signupOffice', name: 'Office' },
+                { id: 'signupUsername', name: 'Username' },
+                { id: 'signupPassword', name: 'Password' },
+                { id: 'signupEmail', name: 'Email' },
+                { id: 'signupPhone', name: 'Phone' }
+            ];
+
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const value = element.value.trim();
+
+                if (!value) {
+                    showFieldError(element, `${field.name} is required`);
+                    isValid = false;
+                }
+            });
+
+            // Validate password length
+            const password = document.getElementById('signupPassword');
+            if (password.value.length < 6) {
+                showFieldError(password, 'Password must be at least 6 characters');
+                isValid = false;
+            }
+
+            // Validate email format
+            const email = document.getElementById('signupEmail');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email.value && !emailRegex.test(email.value)) {
+                showFieldError(email, 'Please enter a valid email address');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Validate individual field
+        function validateField(e) {
+            const field = e.target;
+            const value = field.value.trim();
+            
+            clearFieldError(field);
+            
+            if (field.hasAttribute('required') && !value) {
+                const label = field.previousElementSibling.textContent.replace(/\s*\*?\s*$/, '');
+                showFieldError(field, `${label} is required`);
+                return false;
+            }
+
+            if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                showFieldError(field, 'Please enter a valid email address');
+                return false;
+            }
+
+            if (field.type === 'password' && field.hasAttribute('minlength') && value.length < parseInt(field.getAttribute('minlength'))) {
+                showFieldError(field, `Password must be at least ${field.getAttribute('minlength')} characters`);
+                return false;
+            }
+
+            return true;
+        }
+
+        // Show field error
+        function showFieldError(field, message) {
+            field.classList.add('error');
+            
+            const existingError = field.parentNode.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            field.parentNode.appendChild(errorDiv);
+        }
+
+        // Clear field error
+        function clearFieldError(field) {
+            if (typeof field === 'object' && field.target) {
+                field = field.target;
+            }
+            
+            field.classList.remove('error');
+            const errorMessage = field.parentNode.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+        }
+
+        // Clear all form errors
+        function clearAllErrors() {
+            const errorFields = document.querySelectorAll('.error');
+            errorFields.forEach(field => clearFieldError(field));
+            
+            const errorMessages = document.querySelectorAll('.error-message');
+            errorMessages.forEach(msg => msg.remove());
+        }
+
+        // Show/hide loading overlay
+        function showLoading(show, text = 'Loading...') {
+            if (show) {
+                loadingText.textContent = text;
+                loadingOverlay.style.display = 'flex';
+            } else {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Show success/error messages
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            messageDiv.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+            
+            messageContainer.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        messageDiv.remove();
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // (redirectToMainApp removed, now always redirect to index.html)
+
+        // Logout function (for later use)
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
