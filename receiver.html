@@ -795,10 +795,13 @@ body {
                                 <th>ID</th>
                                 <th>Date Submitted</th>
                                 <th>Forwarded by</th>
+                                <th>Received by</th>
+                                <th>DATE RECEIVED</th>
                                 <th>Name of Company/Contractor</th>
                                 <th>Amount (if Billing)</th>
                                 <th>PARTICULAR/S (content of the request)</th>
                                 <th>STATUS OF REQUEST (c/o miss Jane)</th>
+                                <th>REMARKS</th>
                                 <th>SIGNED COPY RECEIVED BY</th>
                                 <th>RECEIVED DATE</th>
                                 <th id="actionHeader" style="display:none;">Action</th>
@@ -1311,10 +1314,12 @@ async function loadFileRequestsTable() {
             let actionCell = '';
             const receivedBySigned = r['SIGNED COPY RECEIVED BY'] || '';
             const receivedDateSigned = r['RECEIVED DATE'] || '';
+            const receivedBy = r['Received by'] || '';
+            const dateReceived = r['DATE RECEIVED'] || '';
+            const remarks = r['REMARKS'] || '';
+            const status = (r['STATUS OF REQUEST (c/o miss Jane)'] || '').toLowerCase();
+            // Action button logic for PAO
             if (isPAO) {
-                const receivedBy = r['Received by'] || '';
-                const dateReceived = r['DATE RECEIVED'] || '';
-                const status = (r['STATUS OF REQUEST (c/o miss Jane)'] || '').toLowerCase();
                 if (!receivedBy || !dateReceived) {
                     actionCell = `<button class='btn-pro btn-receive' onclick='showLoading(true); receiveRequest(${idx})'><i class="fas fa-inbox"></i> Receive</button>`;
                 } else if (status === 'pending') {
@@ -1329,18 +1334,21 @@ async function loadFileRequestsTable() {
             row += `<td>${r['ID'] || ''}</td>`;
             row += `<td>${r['Date Submitted'] || ''}</td>`;
             row += `<td>${r['Forwarded by'] || ''}</td>`;
+            row += `<td>${receivedBy}</td>`;
+            row += `<td>${dateReceived}</td>`;
             row += `<td>${r['Name of Company/Contractor'] || ''}</td>`;
             // Format Amount as PHP currency
             let amount = r['Amount (if Billing)'] || '';
-            row += `<td class=\"amount-cell\">${formatCurrency(amount)}</td>`;
+            row += `<td class="amount-cell">${formatCurrency(amount)}</td>`;
             row += `<td>${r['PARTICULAR/S (content of the request)'] || ''}</td>`;
             row += `<td>${r['STATUS OF REQUEST (c/o miss Jane)'] || ''}</td>`;
+            row += `<td>${remarks}</td>`;
             row += `<td>${receivedBySigned}</td>`;
             row += `<td>${receivedDateSigned}</td>`;
             if (isPAO) {
-                row += `<td class=\"action-cell\">${actionCell}</td>`;
+                row += `<td class="action-cell">${actionCell}</td>`;
             }
-            tableBody.innerHTML += `<tr class=\"pro-table-row\">${row}</tr>`;
+            tableBody.innerHTML += `<tr class="pro-table-row">${row}</tr>`;
         });
         window._requestsData = requests;
     } catch (e) {
