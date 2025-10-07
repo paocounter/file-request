@@ -718,7 +718,7 @@
             const user = localStorage.getItem('currentUser');
             if (!user) {
                 // Redirect to login
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
                 return false;
             }
             // Display user info or add logout functionality
@@ -728,7 +728,7 @@
                 // You can add user display here
             } catch (e) {
                 localStorage.removeItem('currentUser');
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
                 return false;
             }
             return true;
@@ -759,7 +759,7 @@
         // Logout function
         function logout() {
             localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
 
         // Sidebar Navigation
