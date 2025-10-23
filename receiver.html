@@ -1273,6 +1273,42 @@ body {
             }).format(number);
         }
 
+        // Helper: normalize header keys and perform fallback lookups
+        function normalizeKey(k) {
+            if (k === null || typeof k === 'undefined') return '';
+            return String(k).replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+
+        // Attempt to find a value in an object by trying multiple header name variants.
+        // Also compares normalized header names case-insensitively against the object's keys.
+        function getField(obj, ...names) {
+            if (!obj) return '';
+            // First try direct keys and simple variants
+            for (let name of names) {
+                if (name in obj && obj[name] !== undefined && obj[name] !== null && String(obj[name]).trim() !== '') return obj[name];
+            }
+
+            // Build a map of normalized lower-case keys to actual keys
+            const map = {};
+            for (const k in obj) {
+                if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+                const nk = normalizeKey(k).toLowerCase();
+                if (!(nk in map)) map[nk] = k;
+            }
+
+            // Try normalized comparisons
+            for (let name of names) {
+                const nk = normalizeKey(name).toLowerCase();
+                if (nk && map[nk]) {
+                    const actualKey = map[nk];
+                    const val = obj[actualKey];
+                    if (val !== undefined && val !== null && String(val).trim() !== '') return val;
+                }
+            }
+
+            return '';
+        }
+
 
         // Handle window resize for responsive sidebar
         window.addEventListener('resize', function() {
@@ -1312,12 +1348,21 @@ async function loadFileRequestsTable() {
         }
         requests.forEach((r, idx) => {
             let actionCell = '';
-            const receivedBySigned = r['SIGNED COPY RECEIVED BY'] || '';
-            const receivedDateSigned = r['RECEIVED DATE'] || '';
-            const receivedBy = r['Received by'] || '';
-            const dateReceived = r['DATE RECEIVED'] || '';
-            const remarks = r['REMARKS'] || '';
-            const status = (r['STATUS OF REQUEST (c/o miss Jane)'] || '').toLowerCase();
+            // Use getField to fallback to possible header variants and normalized keys
+            const receivedBySigned = getField(r, 'SIGNED COPY RECEIVED BY', 'SIGNED COPY RECEIVED BY', 'SIGNED_COPY_RECEIVED_BY');
+            const receivedDateSigned = getField(r, 'RECEIVED DATE', 'RECEIVED_DATE');
+            const receivedBy = getField(r, 'Received by', 'Received By', 'received by', 'received_by');
+            const dateReceived = getField(r, 'DATE RECEIVED', 'Date Received', 'DATE_RECEIVED');
+            const remarks = getField(r, 'REMARKS', 'Remarks', 'remarks');
+            const status = (getField(r, 'STATUS OF REQUEST (c/o miss Jane)', 'STATUS OF REQUEST', 'Status', 'status') || '').toLowerCase();
+            // Populate canonical properties on the request object for downstream usage
+            r._ID = getField(r, 'ID', 'Id', 'id');
+            r._DateSubmitted = getField(r, 'Date Submitted', 'DATE SUBMITTED', 'DateSubmitted');
+            r._ForwardedBy = getField(r, 'Forwarded by', 'Forwarded By', 'forwarded by');
+            r._ReceivedBy = receivedBy;
+            r._DateReceived = dateReceived;
+            r._Remarks = remarks;
+            r._Status = status;
             // Action button logic for PAO
             if (isPAO) {
                 if (!receivedBy || !dateReceived) {
@@ -1331,20 +1376,23 @@ async function loadFileRequestsTable() {
                 }
             }
             let row = '';
-            row += `<td>${r['ID'] || ''}</td>`;
-            row += `<td>${r['Date Submitted'] || ''}</td>`;
-            row += `<td>${r['Forwarded by'] || ''}</td>`;
-            row += `<td>${receivedBy}</td>`;
-            row += `<td>${dateReceived}</td>`;
-            row += `<td>${r['Name of Company/Contractor'] || ''}</td>`;
+            row += `<td>${r._ID || ''}</td>`;
+            row += `<td>${r._DateSubmitted || ''}</td>`;
+            row += `<td>${r._ForwardedBy || ''}</td>`;
+            row += `<td>${receivedBy || ''}</td>`;
+            row += `<td>${dateReceived || ''}</td>`;
+            // Company name with fallbacks
+            const companyName = getField(r, 'Name of Company/Contractor', 'Company/Contractor Name', 'Company', 'Name of Company');
+            row += `<td>${companyName || ''}</td>`;
             // Format Amount as PHP currency
-            let amount = r['Amount (if Billing)'] || '';
+            let amount = getField(r, 'Amount (if Billing)', 'Amount', 'amount (if billing)', 'Amount (if Billing)') || '';
             row += `<td class="amount-cell">${formatCurrency(amount)}</td>`;
-            row += `<td>${r['PARTICULAR/S (content of the request)'] || ''}</td>`;
-            row += `<td>${r['STATUS OF REQUEST (c/o miss Jane)'] || ''}</td>`;
-            row += `<td>${remarks}</td>`;
-            row += `<td>${receivedBySigned}</td>`;
-            row += `<td>${receivedDateSigned}</td>`;
+            const particulars = getField(r, 'PARTICULAR/S (content of the request)', 'Particulars', 'PARTICULARS', 'particulars');
+            row += `<td>${particulars || ''}</td>`;
+            row += `<td>${(r._Status || '')}</td>`;
+            row += `<td>${remarks || ''}</td>`;
+            row += `<td>${receivedBySigned || ''}</td>`;
+            row += `<td>${receivedDateSigned || ''}</td>`;
             if (isPAO) {
                 row += `<td class="action-cell">${actionCell}</td>`;
             }
